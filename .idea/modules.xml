@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/SecureScalableNginx.iml" filepath="$PROJECT_DIR$/SecureScalableNginx.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/SecureScalableNginx.iml" filepath="$PROJECT_DIR$/.idea/SecureScalableNginx.iml" />
     </modules>
   </component>
 </project>
