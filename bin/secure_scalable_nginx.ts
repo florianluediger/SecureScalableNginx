@@ -1,9 +1,27 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
-import { SecureScalableNginxStack } from '../lib/secure_scalable_nginx_stack';
+import {AuthenticationStack} from '../lib/secure_scalable_nginx_stack';
+import {BaseStack} from "../lib/base_stack";
+import {ComputeStack} from "../lib/compute_stack";
 
 const app = new cdk.App();
-new SecureScalableNginxStack(app, 'SecureScalableNginxStack', {
-  env: { account: '241314003741', region: 'eu-central-1' },
+
+const props = {
+    env: {account: '241314003741', region: 'eu-central-1'},
+    domainName: "luediger.link",
+};
+
+const baseStack = new BaseStack(app, 'BaseStack', props);
+
+const computeStack = new ComputeStack(app, 'ComputeStack', {
+    ...props,
+    vpc: baseStack.vpc
+});
+
+new AuthenticationStack(app, 'AuthenticationStack', {
+    ...props,
+    vpc: baseStack.vpc,
+    service: computeStack.service,
+    serviceSecurityGroup: computeStack.serviceSecurityGroup
 });

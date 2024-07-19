@@ -7,5 +7,61 @@
   "hosted-zone:account=241314003741:domainName=luediger.link:region=eu-central-1": {
     "Id": "/hostedzone/Z036772186QFUM1XWT6P",
     "Name": "luediger.link."
+  },
+  "vpc-provider:account=241314003741:filter.tag:Name=SecureScalableNginxVPC:region=eu-central-1:returnAsymmetricSubnets=true": {
+    "vpcId": "vpc-08fd5cd62dd8422af",
+    "vpcCidrBlock": "10.0.0.0/16",
+    "ownerAccountId": "241314003741",
+    "availabilityZones": [],
+    "subnetGroups": [
+      {
+        "name": "Public",
+        "type": "Public",
+        "subnets": [
+          {
+            "subnetId": "subnet-02f451338700dabbf",
+            "cidr": "10.0.0.0/19",
+            "availabilityZone": "eu-central-1a",
+            "routeTableId": "rtb-0d69a40f192fd78e6"
+          },
+          {
+            "subnetId": "subnet-0869dec0731ef4ffe",
+            "cidr": "10.0.32.0/19",
+            "availabilityZone": "eu-central-1b",
+            "routeTableId": "rtb-063dceeb09273c5fd"
+          },
+          {
+            "subnetId": "subnet-0e2702c8ba46f8b5c",
+            "cidr": "10.0.64.0/19",
+            "availabilityZone": "eu-central-1c",
+            "routeTableId": "rtb-0f51094eaeb43d7e7"
+          }
+        ]
+      },
+      {
+        "name": "Private",
+        "type": "Private",
+        "subnets": [
+          {
+            "subnetId": "subnet-0fa2a72ef6a35970f",
+            "cidr": "10.0.96.0/19",
+            "availabilityZone": "eu-central-1a",
+            "routeTableId": "rtb-0ec4fcf814d43befc"
+          },
+          {
+            "subnetId": "subnet-0149c578bbd028400",
+            "cidr": "10.0.128.0/19",
+            "availabilityZone": "eu-central-1b",
+            "routeTableId": "rtb-0be75e037dc35b22b"
+          },
+          {
+            "subnetId": "subnet-0f77c52950218b9cd",
+            "cidr": "10.0.160.0/19",
+            "availabilityZone": "eu-central-1c",
+            "routeTableId": "rtb-009410bef7ffa7ef9"
+          }
+        ]
+      }
+    ]
   }
 }
