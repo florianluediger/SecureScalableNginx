@@ -3,5 +3,9 @@
     "eu-central-1a",
     "eu-central-1b",
     "eu-central-1c"
-  ]
+  ],
+  "hosted-zone:account=241314003741:domainName=luediger.link:region=eu-central-1": {
+    "Id": "/hostedzone/Z036772186QFUM1XWT6P",
+    "Name": "luediger.link."
+  }
 }

@@ -16,11 +16,16 @@ import {
     ApplicationProtocol,
     ApplicationTargetGroup
 } from "aws-cdk-lib/aws-elasticloadbalancingv2";
+import {ARecord, HostedZone, RecordTarget} from "aws-cdk-lib/aws-route53";
+import {Certificate, CertificateValidation} from "aws-cdk-lib/aws-certificatemanager";
+import {LoadBalancerTarget} from "aws-cdk-lib/aws-route53-targets";
 
 
 export class SecureScalableNginxStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
         super(scope, id, props);
+
+        const domainName = "luediger.link";
 
         const vpc = new Vpc(this, "VPC", {
             vpcName: "SecureScalableNginxVPC",
@@ -67,6 +72,16 @@ export class SecureScalableNginxStack extends cdk.Stack {
             securityGroups: [serviceSecurityGroup]
         });
 
+
+        const hostedZone = HostedZone.fromLookup(this, "HostedZone", {
+            domainName: domainName,
+        });
+
+        const certificate = new Certificate(this, "Certificate", {
+            domainName: domainName,
+            validation: CertificateValidation.fromDns(hostedZone),
+        });
+
         const loadBalancerSecurityGroup = new SecurityGroup(this, "SecurityGroup", {
             vpc: vpc,
             securityGroupName: "SecureScalableNginxSecurityGroup",
@@ -83,8 +98,9 @@ export class SecureScalableNginxStack extends cdk.Stack {
 
         const listener = new ApplicationListener(this, "NginxListener", {
             loadBalancer: alb,
-            port: 80,
+            port: 443,
             open: true,
+            certificates: [certificate],
         });
 
         const targetGroup = new ApplicationTargetGroup(this, "NginxTargetGroup", {
@@ -97,7 +113,11 @@ export class SecureScalableNginxStack extends cdk.Stack {
 
         listener.addTargetGroups("Nginx", {
             targetGroups: [targetGroup]
-        })
+        });
 
+        new ARecord(this, "ARecord", {
+            zone: hostedZone,
+            target: RecordTarget.fromAlias(new LoadBalancerTarget(alb)),
+        })
     }
 }
