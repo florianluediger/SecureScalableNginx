@@ -1,6 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import {Construct} from 'constructs';
-import {Peer, Port, SecurityGroup, SubnetType, Vpc} from "aws-cdk-lib/aws-ec2";
+import {Port, SecurityGroup, SubnetType, Vpc} from "aws-cdk-lib/aws-ec2";
 import {
     Cluster,
     Compatibility,
@@ -13,12 +13,14 @@ import {
 import {
     ApplicationListener,
     ApplicationLoadBalancer,
-    ApplicationProtocol,
-    ApplicationTargetGroup
+    ApplicationTargetGroup,
+    ListenerAction
 } from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import {ARecord, HostedZone, RecordTarget} from "aws-cdk-lib/aws-route53";
 import {Certificate, CertificateValidation} from "aws-cdk-lib/aws-certificatemanager";
 import {LoadBalancerTarget} from "aws-cdk-lib/aws-route53-targets";
+import {CfnUserPoolClient, OAuthScope, UserPool, UserPoolClient, UserPoolDomain} from "aws-cdk-lib/aws-cognito";
+import {AuthenticateCognitoAction} from "aws-cdk-lib/aws-elasticloadbalancingv2-actions";
 
 
 export class SecureScalableNginxStack extends cdk.Stack {
@@ -96,11 +98,35 @@ export class SecureScalableNginxStack extends cdk.Stack {
             internetFacing: true,
         });
 
-        const listener = new ApplicationListener(this, "NginxListener", {
-            loadBalancer: alb,
-            port: 443,
-            open: true,
-            certificates: [certificate],
+        const userPool = new UserPool(this, "UserPool", {
+            userPoolName: "SecureScalableNginxUserPool",
+            selfSignUpEnabled: true,
+        });
+
+        const userPoolClient = new UserPoolClient(this, "UserPoolClient", {
+            userPool: userPool,
+            generateSecret: true,
+            authFlows: {
+                userPassword: true,
+            },
+            oAuth: {
+                flows: {
+                    authorizationCodeGrant: true,
+                },
+                scopes: [OAuthScope.EMAIL],
+                callbackUrls: [`https://${domainName}/oauth2/idpresponse`],
+            },
+        });
+
+        const cfnClient = userPoolClient.node.defaultChild as CfnUserPoolClient;
+        cfnClient.addPropertyOverride('RefreshTokenValidity', 1);
+        cfnClient.addPropertyOverride('SupportedIdentityProviders', ['COGNITO']);
+
+        const userPoolDomain = new UserPoolDomain(this, "UserPoolDomain", {
+            userPool: userPool,
+            cognitoDomain: {
+                domainPrefix: "secure-scalable-nginx"
+            }
         });
 
         const targetGroup = new ApplicationTargetGroup(this, "NginxTargetGroup", {
@@ -111,13 +137,22 @@ export class SecureScalableNginxStack extends cdk.Stack {
 
         targetGroup.addTarget(service);
 
-        listener.addTargetGroups("Nginx", {
-            targetGroups: [targetGroup]
+        new ApplicationListener(this, "NginxListener", {
+            loadBalancer: alb,
+            port: 443,
+            open: true,
+            certificates: [certificate],
+            defaultAction: new AuthenticateCognitoAction({
+                next: ListenerAction.forward([targetGroup]),
+                userPool: userPool,
+                userPoolClient: userPoolClient,
+                userPoolDomain: userPoolDomain,
+            }),
         });
 
         new ARecord(this, "ARecord", {
             zone: hostedZone,
             target: RecordTarget.fromAlias(new LoadBalancerTarget(alb)),
-        })
+        });
     }
 }
